@@ -16,9 +16,9 @@ async function initOpenCascade() {
   // @ts-ignore
   const opencascadeWasm = (await import('replicad-opencascadejs/src/replicad_single.wasm?url')).default;
 
-  const OC = await opencascade({
-    locateFile: () => opencascadeWasm,
-  });
+const OC = await (opencascade as any)({
+  locateFile: () => opencascadeWasm,
+});
 
   setOC(OC);
   isOCInitialized = true;
