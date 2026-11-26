@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Factory, Flame, Wind, Sparkles } from 'lucide-react';
+import { Factory, Flame, Wind, Scale, ClipboardCheck } from 'lucide-react';
 import { HeatSinkParams, GeometryMetrics } from '../types/heatsink';
 import { ASSIGNMENT_SPECS } from '../config/assignmentSpecs';
 import { analyzeIndustrialDFM } from '../core/industrialAnalysis';
@@ -19,44 +19,85 @@ export const IndustrialPanel: React.FC<IndustrialPanelProps> = ({ params, metric
   const report = useMemo(() => analyzeIndustrialDFM(params, metrics), [params, metrics]);
   const { thermal, chip } = ASSIGNMENT_SPECS;
 
+  const formatPct = (val: number) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`;
+
   return (
     <div className="space-y-4">
-      {/* 1. Bajet Rintangan Haba Industri */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5">
-        <div className="flex items-center gap-2 text-xs font-semibold text-white uppercase tracking-wider">
-          <Flame className="w-4 h-4 text-orange-400" />
-          Bajet Rintangan Haba (Spec Industri)
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-2.5">
-            <div className="text-[11px] text-slate-400">Had Maksimum (Total)</div>
-            <div className="text-lg font-bold text-white">
-              {report.maxThermalBudget.toFixed(2)}{' '}
-              <span className="text-xs font-normal text-slate-400">°C/W</span>
-            </div>
-          </div>
-          <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-2.5">
-            <div className="text-[11px] text-slate-400">Sasaran Heat Sink*</div>
-            <div className="text-lg font-bold text-blue-400">
-              ≤ {report.netHeatSinkBudget.toFixed(2)}{' '}
-              <span className="text-xs font-normal text-slate-400">°C/W</span>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          Dikira daripada ({thermal.tMaxChip}°C &minus; {thermal.tAmbient}°C) &divide; {chip.heatPower} W.
-          *Di industri, ~{thermal.timAllowance} °C/W ditolak untuk rintangan{' '}
-          <strong className="text-slate-200">TIM (Thermal Paste)</strong> antara cip dan tapak.
-        </p>
-      </div>
-
-      {/* 2. Kebolehbuatan & Kos (DFM) */}
+      {/* 1. Perbandingan Langsung vs Base Case */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-white uppercase tracking-wider">
-            <Factory className="w-4 h-4 text-blue-400" />
+            <Scale className="w-4 h-4 text-blue-400" />
+            Perbandingan vs Base Case
+          </div>
+          {report.isBaseCase && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">
+              Model Rujukan
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-2">
+            <div className="text-[10px] text-slate-400">Jisim Bahan</div>
+            <div
+              className={`text-sm font-bold mt-0.5 ${
+                report.massDiffPct > 15
+                  ? 'text-amber-400'
+                  : report.massDiffPct < -2
+                  ? 'text-emerald-400'
+                  : 'text-white'
+              }`}
+            >
+              {report.isBaseCase ? '0.0%' : formatPct(report.massDiffPct)}
+            </div>
+          </div>
+
+          <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-2">
+            <div className="text-[10px] text-slate-400">Luas Penyejukan</div>
+            <div
+              className={`text-sm font-bold mt-0.5 ${
+                report.areaDiffPct > 2
+                  ? 'text-emerald-400'
+                  : report.areaDiffPct < -2
+                  ? 'text-amber-400'
+                  : 'text-white'
+              }`}
+            >
+              {report.isBaseCase ? '0.0%' : formatPct(report.areaDiffPct)}
+            </div>
+          </div>
+
+          <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-2">
+            <div className="text-[10px] text-slate-400">Kecekapan Bahan</div>
+            <div
+              className={`text-sm font-bold mt-0.5 ${
+                report.efficiencyIndex >= report.baseEfficiencyIndex
+                  ? 'text-emerald-400'
+                  : 'text-slate-200'
+              }`}
+            >
+              {report.efficiencyIndex.toFixed(2)}{' '}
+              <span className="text-[10px] font-normal text-slate-400">cm²/g</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Cabaran Justifikasi Laporan (PO3 - Dinamik) */}
+      <div className="bg-blue-950/30 border border-blue-800/60 rounded-xl p-3.5 space-y-1.5">
+        <div className="flex items-center gap-2 text-xs font-semibold text-blue-300">
+          <ClipboardCheck className="w-4 h-4 shrink-0" />
+          Fokus Analisis &amp; Justifikasi (PO3)
+        </div>
+        <p className="text-xs text-slate-300 leading-relaxed">{report.po3Challenge}</p>
+      </div>
+
+      {/* 3. Kebolehbuatan & Kos (DFM) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs font-semibold text-white uppercase tracking-wider">
+            <Factory className="w-4 h-4 text-slate-300" />
             Kebolehbuatan (DFM)
           </div>
           <span
@@ -69,15 +110,11 @@ export const IndustrialPanel: React.FC<IndustrialPanelProps> = ({ params, metric
         </div>
 
         <div className="text-sm font-semibold text-slate-100">{report.manufacturingMethod}</div>
-        <div className="text-xs text-slate-400">
-          Nisbah Tinggi-ke-Celah (Aspect Ratio):{' '}
-          <span className="font-mono text-slate-200">{report.aspectRatio.toFixed(1)} : 1</span>
-        </div>
         <p className="text-xs text-slate-400 leading-relaxed">{report.dfmNote}</p>
       </div>
 
-      {/* 3. Realiti Perolakan Semula Jadi */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5">
+      {/* 4. Realiti Perolakan Semula Jadi (Panduan Flow Simulation) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-white uppercase tracking-wider">
             <Wind className="w-4 h-4 text-cyan-400" />
@@ -94,17 +131,22 @@ export const IndustrialPanel: React.FC<IndustrialPanelProps> = ({ params, metric
         <p className="text-xs text-slate-400 leading-relaxed">{report.convectionNote}</p>
       </div>
 
-      {/* 4. Nota Amalan Industri: Black Anodizing */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
-        <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-          <Sparkles className="w-3.5 h-3.5" />
-          Tip Industri: Kemasan Black Anodized
+      {/* 5. Rujukan Ringkas Bajet Rintangan Haba */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="flex items-center gap-1.5 font-semibold text-slate-200">
+            <Flame className="w-3.5 h-3.5 text-orange-400" />
+            Bajet Rintangan Haba ({chip.heatPower} W)
+          </span>
+          <span className="font-mono text-blue-400 font-semibold">
+            ≤ {report.netHeatSinkBudget.toFixed(2)} °C/W
+          </span>
         </div>
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          Dalam <em>natural convection</em> (udara tenang), sinaran haba (<em>radiation</em>) menyumbang{' '}
-          <strong className="text-slate-200">20%–30%</strong> jumlah penyejukan. Sebab itu heat sink
-          industri hampir selalu di-anodize hitam (&epsilon; &approx; 0.85) berbanding aluminium berkilat
-          (&epsilon; &approx; 0.1).
+          Had sistem: {report.maxThermalBudget.toFixed(2)} °C/W ({thermal.tMaxChip}°C &minus;{' '}
+          {thermal.tAmbient}°C) ditolak ≈{thermal.timAllowance} °C/W untuk rintangan TIM. Nota:
+          kemasan <em>Black Anodized</em> (ε ≈ 0.85) menambah 20%–30% penyejukan sinaran dalam
+          udara tenang.
         </p>
       </div>
     </div>
