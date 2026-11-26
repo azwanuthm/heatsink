@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Sliders, Box } from 'lucide-react';
+import { Sliders, Box, Factory } from 'lucide-react';
 import { ASSIGNMENT_SPECS } from './config/assignmentSpecs';
 import { HeatSinkParams } from './types/heatsink';
 import { calculateMetrics } from './core/geometryMath';
@@ -7,8 +7,9 @@ import { Viewport3D } from './components/Viewport3D';
 import { MetricsBar } from './components/MetricsBar';
 import { ControlPanel } from './components/ControlPanel';
 import { SolidWorksGuide } from './components/SolidWorksGuide';
+import { IndustrialPanel } from './components/IndustrialPanel';
 
-type ActiveTab = 'design' | 'export';
+type ActiveTab = 'design' | 'industrial' | 'export';
 
 export function App() {
   const [params, setParams] = useState<HeatSinkParams>(ASSIGNMENT_SPECS.baseCase);
@@ -45,40 +46,55 @@ export function App() {
 
         {/* Kanan: Panel Kawalan Ber-Tab (Modular) */}
         <div className="lg:col-span-4 bg-slate-900/50 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div className="grid grid-cols-2 border-b border-slate-800 bg-slate-900">
+          <div className="grid grid-cols-3 border-b border-slate-800 bg-slate-900">
             <button
               onClick={() => setActiveTab('design')}
-              className={`flex items-center justify-center gap-2 py-3 text-xs font-semibold transition border-b-2 ${
+              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition border-b-2 ${
                 activeTab === 'design'
                   ? 'border-blue-500 text-blue-400 bg-slate-900'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Sliders className="w-4 h-4" />
-              Reka Bentuk (A)
+              <Sliders className="w-3.5 h-3.5" />
+              Reka Bentuk
+            </button>
+            <button
+              onClick={() => setActiveTab('industrial')}
+              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition border-b-2 ${
+                activeTab === 'industrial'
+                  ? 'border-blue-500 text-blue-400 bg-slate-900'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Factory className="w-3.5 h-3.5" />
+              Industri
             </button>
             <button
               onClick={() => setActiveTab('export')}
-              className={`flex items-center justify-center gap-2 py-3 text-xs font-semibold transition border-b-2 ${
+              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition border-b-2 ${
                 activeTab === 'export'
                   ? 'border-blue-500 text-blue-400 bg-slate-900'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Box className="w-4 h-4" />
-              Eksport .STEP (C)
+              <Box className="w-3.5 h-3.5" />
+              Eksport .STEP
             </button>
           </div>
 
           <div className="p-4 overflow-y-auto flex-1">
-            {activeTab === 'design' ? (
+            {activeTab === 'design' && (
               <ControlPanel
                 params={params}
                 metrics={metrics}
                 onChange={setParams}
                 onResetBaseCase={() => setParams(ASSIGNMENT_SPECS.baseCase)}
               />
-            ) : (
+            )}
+            {activeTab === 'industrial' && (
+              <IndustrialPanel params={params} metrics={metrics} />
+            )}
+            {activeTab === 'export' && (
               <SolidWorksGuide params={params} isValid={metrics.isValid} />
             )}
           </div>
