@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { RotateCcw, AlertTriangle, CheckCircle2, Factory } from 'lucide-react';
 import { HeatSinkParams, GeometryMetrics, FinType } from '../types/heatsink';
 import { ASSIGNMENT_SPECS } from '../config/assignmentSpecs';
 
@@ -28,8 +28,28 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm font-medium rounded-lg border border-slate-700 transition"
       >
         <RotateCcw className="w-4 h-4" />
-        Tetapkan Semula ke Base Case (Fasa 1 & 2)
+        Tetapkan Semula ke Base Case (Fasa 1 &amp; 2)
       </button>
+
+      {/* Praset Contoh Industri Sebenar */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+          <Factory className="w-3.5 h-3.5 text-blue-400" />
+          Rujukan Reka Bentuk Industri Sebenar:
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {ASSIGNMENT_SPECS.industrialPresets.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => onChange(preset.params)}
+              className="py-1.5 px-2.5 text-[11px] font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg transition text-left truncate"
+              title={preset.label}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Status Kekangan */}
       {metrics.warnings.length > 0 ? (
@@ -170,7 +190,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       {/* Toggle Cip Silikon */}
       <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
         <div>
-          <div className="text-xs font-medium text-slate-200">Papar Cip Silikon ({ASSIGNMENT_SPECS.chip.width}×{ASSIGNMENT_SPECS.chip.length}×{ASSIGNMENT_SPECS.chip.thickness} mm)</div>
+          <div className="text-xs font-medium text-slate-200">
+            Papar Cip Silikon ({ASSIGNMENT_SPECS.chip.width}×{ASSIGNMENT_SPECS.chip.length}×{ASSIGNMENT_SPECS.chip.thickness} mm)
+          </div>
           <div className="text-[11px] text-slate-400">Sentiasa disertakan dalam fail eksport .STEP</div>
         </div>
         <input
@@ -184,7 +206,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   );
 };
 
-// Komponen kecil untuk slider supaya kod kekal kemas
 interface SliderFieldProps {
   label: string;
   value: number;
