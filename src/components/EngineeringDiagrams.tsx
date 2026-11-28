@@ -28,7 +28,7 @@ export const EngineeringDiagrams: React.FC<EngineeringDiagramsProps> = ({
   const baseY = svgH - 10;
 
   const pitch = count > 1 ? (W - t) / (count - 1) : 0;
-  const isChoked = report.convectionStatus === 'Tercekik (Choked)';
+  const isRestricted = report.convectionStatus === 'Aliran Terhad';
 
   return (
     <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-lg rounded-2xl p-3.5 w-[275px] space-y-3">
