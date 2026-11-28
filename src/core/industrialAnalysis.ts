@@ -4,15 +4,15 @@ import { calculateMetrics } from './geometryMath';
 
 export interface IndustrialReport {
   // Perbandingan Dinamik vs Base Case
-  massDiffPct: number;             // % perubahan jisim berbanding Base Case
-  areaDiffPct: number;             // % perubahan luas permukaan berbanding Base Case
-  efficiencyIndex: number;         // cm²/g (luas penyejukan per gram aluminium)
-  baseEfficiencyIndex: number;     // cm²/g bagi Base Case
+  massDiffPct: number;
+  areaDiffPct: number;
+  efficiencyIndex: number;
+  baseEfficiencyIndex: number;
   isBaseCase: boolean;
 
   // Bajet Haba Industri
-  maxThermalBudget: number;        // °C/W (keseluruhan)
-  netHeatSinkBudget: number;       // °C/W (selepas tolak anggaran TIM)
+  maxThermalBudget: number;
+  netHeatSinkBudget: number;
 
   // DFM & Aliran Udara Kontekstual
   aspectRatio: number;
@@ -98,7 +98,7 @@ export function analyzeIndustrialDFM(
   let convectionColor: 'emerald' | 'red' | 'amber' = 'emerald';
   let convectionNote = '';
 
-if (minGap < 5.0) {
+  if (minGap < 5.0) {
     convectionStatus = 'Aliran Terhad';
     convectionColor = 'amber';
     convectionNote = `Celah semasa (${minGap.toFixed(1)} mm) mula meningkatkan rintangan aliran udara tenang. Sesuai dijadikan salah satu iterasi dalam Flow Simulation untuk menguji sama ada pertambahan luas permukaan masih berbaloi.`;
@@ -118,7 +118,7 @@ if (minGap < 5.0) {
     po3Challenge =
       'Ini adalah model rujukan (Base Case). Gunakan jisim (126.4 g) dan suhu simulasi model ini sebagai penanda aras untuk membuktikan peningkatan prestasi dalam Fasa 3.';
   } else if (convectionStatus === 'Aliran Terhad') {
-    po3Challenge = `Walaupun luas permukaan berubah sebanyak ${areaDiffPct >= 0 ? '+' : ''}${areaDiffPct.toFixed(1)}%, celah ${minGap.toFixed(1)} mm berisiko menyekat aliran udara. Bincangkan dalam laporan jika graf suhu anda mula naik semula pada iterasi ini.`;
+    po3Challenge = `Luas permukaan berubah sebanyak ${areaDiffPct >= 0 ? '+' : ''}${areaDiffPct.toFixed(1)}%, namun celah ${minGap.toFixed(1)} mm mula mengehadkan aliran udara. Uji reka bentuk ini dalam SolidWorks untuk melihat titik optimum graf suhu anda.`;
   } else if (massDiffPct > 20) {
     po3Challenge = `Reka bentuk ini ${massDiffPct.toFixed(1)}% lebih berat daripada Base Case. Dalam laporan Fasa 3, anda perlu buktikan penurunan suhu cip cukup signifikan untuk mewajarkan pertambahan kos bahan ini.`;
   } else if (costTier === 'Tinggi') {
