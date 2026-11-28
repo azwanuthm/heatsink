@@ -1,4 +1,6 @@
 export type FinType = 'rectangular' | 'square-pin' | 'circular-pin';
+export type SurfaceFinish = 'raw' | 'black-anodized';
+export type CameraView = 'isometric' | 'front' | 'side' | 'top';
 
 export interface HeatSinkParams {
   finType: FinType;
@@ -6,21 +8,23 @@ export interface HeatSinkParams {
   baseLength: number;     // mm (Y)
   baseThickness: number;  // mm (t_b)
   finHeight: number;      // mm (L_c)
-  finThickness: number;   // mm (t untuk rectangular/square pin, diameter d untuk circular pin)
-  finCount: number;       // Bilangan sirip (untuk rectangular)
-  pinCountX: number;      // Bilangan pin arah X (untuk pin fin)
-  pinCountY: number;      // Bilangan pin arah Y (untuk pin fin)
+  finThickness: number;   // mm (t atau diameter d)
+  finCount: number;       // Bilangan sirip (rectangular)
+  pinCountX: number;      // Bilangan pin arah X
+  pinCountY: number;      // Bilangan pin arah Y
   showChip: boolean;      // Paparkan blok cip silikon 40x40x2mm
+  finish: SurfaceFinish;  // Raw Aluminium vs Black Anodized
+  showAirflow: boolean;   // Paparkan anak panah aliran apungan udara panas
 }
 
 export interface GeometryMetrics {
   totalHeight: number;      // mm (t_b + L_c)
   massGrams: number;        // gram
-  surfaceAreaCm2: number;   // cm² (luas permukaan terdedah)
+  surfaceAreaCm2: number;   // cm²
   surfaceAreaM2: number;    // m²
-  finGapX: number;          // mm (jarak celah antara sirip/pin)
-  finGapY: number | null;   // mm (untuk pin fin sahaja)
-  totalFins: number;        // Jumlah sirip atau pin
-  warnings: string[];       // Senarai amaran jika melanggar had tugasan
-  isValid: boolean;         // True jika semua kekangan dipatuhi
+  finGapX: number;          // mm
+  finGapY: number | null;   // mm
+  totalFins: number;
+  warnings: string[];
+  isValid: boolean;
 }
