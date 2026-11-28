@@ -35,17 +35,17 @@ export const EngineeringDiagrams: React.FC<EngineeringDiagramsProps> = ({
       {/* Tajuk Kad */}
       <div className="flex items-center justify-between">
         <div className="text-xs font-bold text-slate-800">Keratan 2D &amp; Lapisan Sempadan</div>
-        <span
-          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-            isChoked
-              ? 'bg-red-100 text-red-700'
-              : report.convectionStatus === 'Optimum'
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'bg-amber-100 text-amber-700'
-          }`}
-        >
-          {report.convectionStatus}
-        </span>
+<span
+  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+    isRestricted
+      ? 'bg-amber-100 text-amber-700'
+      : report.convectionStatus === 'Optimum'
+      ? 'bg-emerald-100 text-emerald-700'
+      : 'bg-slate-100 text-slate-600'
+  }`}
+>
+  {report.convectionStatus}
+</span>
       </div>
 
       {/* 1. Rajah Keratan Rentas 2D */}
@@ -78,7 +78,7 @@ export const EngineeringDiagrams: React.FC<EngineeringDiagramsProps> = ({
                 y={baseY - drawTb - drawLc + 2}
                 width={gapPx}
                 height={drawLc - 2}
-                fill={isChoked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(56, 189, 248, 0.15)'}
+                fill={isRestricted ? 'rgba(245, 158, 11, 0.22)' : 'rgba(56, 189, 248, 0.15)'}
               />
             );
           })}
