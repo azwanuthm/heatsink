@@ -1,105 +1,126 @@
 import React, { useState, useMemo } from 'react';
-import { Sliders, Box, Factory } from 'lucide-react';
 import { ASSIGNMENT_SPECS } from './config/assignmentSpecs';
-import { HeatSinkParams } from './types/heatsink';
+import { HeatSinkParams, CameraView } from './types/heatsink';
 import { calculateMetrics } from './core/geometryMath';
+import { analyzeIndustrialDFM } from './core/industrialAnalysis';
 import { Viewport3D } from './components/Viewport3D';
-import { MetricsBar } from './components/MetricsBar';
 import { ControlPanel } from './components/ControlPanel';
-import { SolidWorksGuide } from './components/SolidWorksGuide';
 import { IndustrialPanel } from './components/IndustrialPanel';
+import { SolidWorksGuide } from './components/SolidWorksGuide';
+import { EngineeringDiagrams } from './components/EngineeringDiagrams';
+import { MetricsHUD } from './components/MetricsHUD';
 
 type ActiveTab = 'design' | 'industrial' | 'export';
 
 export function App() {
   const [params, setParams] = useState<HeatSinkParams>(ASSIGNMENT_SPECS.baseCase);
   const [activeTab, setActiveTab] = useState<ActiveTab>('design');
+  const [cameraView, setCameraView] = useState<CameraView>('isometric');
+  const [viewTrigger, setViewTrigger] = useState<number>(0);
 
   const metrics = useMemo(() => calculateMetrics(params), [params]);
+  const report = useMemo(() => analyzeIndustrialDFM(params, metrics), [params, metrics]);
+
+  const handleSelectView = (view: CameraView) => {
+    setCameraView(view);
+    setViewTrigger((n) => n + 1);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Header Ringkas */}
-      <header className="border-b border-slate-800 bg-slate-900/60 px-6 py-3.5 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-white tracking-tight">
-            Penjana Heat Sink 3D <span className="text-blue-400 font-normal">| {ASSIGNMENT_SPECS.courseCode}</span>
+    <div className="relative w-screen h-screen overflow-hidden bg-[#f1f5f9] text-slate-900 select-none">
+      {/* KANVAS 3D PENUH */}
+      <div className="absolute inset-0">
+        <Viewport3D
+          params={params}
+          isValid={metrics.isValid}
+          cameraView={cameraView}
+          viewTrigger={viewTrigger}
+        />
+      </div>
+
+      {/* ZON 1 (KIRI): Panel Kawalan Terapung */}
+      <aside className="absolute top-3 left-3 bottom-3 w-[320px] max-w-[calc(100vw-24px)] bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl rounded-2xl flex flex-col overflow-hidden z-10">
+        {/* Header Jenama Makmal Maya */}
+        <div className="px-4 pt-3.5 pb-2.5 border-b border-slate-100">
+          <div className="inline-block text-[10px] font-bold tracking-wider uppercase text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md mb-1">
+            MAKMAL MAYA &amp; CAD &bull; {ASSIGNMENT_SPECS.courseCode}
+          </div>
+          <h1 className="text-base font-extrabold text-slate-900 leading-tight">
+            Penjana Heat Sink Industri
           </h1>
-          <p className="text-xs text-slate-400">
-            Alat Bantu Reka Bentuk &amp; Eksport CAD ({ASSIGNMENT_SPECS.courseName})
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Reka bentuk penyejukan pasif, analisis DFM &amp; eksport .STEP untuk SWFS.
           </p>
         </div>
-        <div className="hidden sm:block text-xs text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
-          Had Tugasan: Tapak ≤ {ASSIGNMENT_SPECS.limits.maxBaseWidth}×{ASSIGNMENT_SPECS.limits.maxBaseLength} mm &bull; Tinggi ≤ {ASSIGNMENT_SPECS.limits.maxTotalHeight} mm
-        </div>
-      </header>
 
-      {/* Ruang Kerja Utama */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1600px] w-full mx-auto">
-        {/* Kiri: Paparan 3D + Metrik Langsung */}
-        <div className="lg:col-span-8 flex flex-col gap-4 min-h-[480px]">
-          <MetricsBar metrics={metrics} />
-          <div className="flex-1 min-h-[400px]">
-            <Viewport3D params={params} isValid={metrics.isValid} />
-          </div>
-        </div>
-
-        {/* Kanan: Panel Kawalan Ber-Tab (Modular) */}
-        <div className="lg:col-span-4 bg-slate-900/50 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div className="grid grid-cols-3 border-b border-slate-800 bg-slate-900">
+        {/* Tab Navigasi Ringkas */}
+        <div className="grid grid-cols-3 p-1.5 gap-1 bg-slate-100/80 border-b border-slate-200/70">
+          {(
+            [
+              { id: 'design', label: '1. Geometri' },
+              { id: 'industrial', label: '2. Industri' },
+              { id: 'export', label: '3. Eksport' },
+            ] as { id: ActiveTab; label: string }[]
+          ).map((tab) => (
             <button
-              onClick={() => setActiveTab('design')}
-              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition border-b-2 ${
-                activeTab === 'design'
-                  ? 'border-blue-500 text-blue-400 bg-slate-900'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-1.5 text-[11px] font-bold rounded-lg transition ${
+                activeTab === tab.id
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <Sliders className="w-3.5 h-3.5" />
-              Reka Bentuk
+              {tab.label}
             </button>
-            <button
-              onClick={() => setActiveTab('industrial')}
-              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition border-b-2 ${
-                activeTab === 'industrial'
-                  ? 'border-blue-500 text-blue-400 bg-slate-900'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Factory className="w-3.5 h-3.5" />
-              Industri
-            </button>
-            <button
-              onClick={() => setActiveTab('export')}
-              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition border-b-2 ${
-                activeTab === 'export'
-                  ? 'border-blue-500 text-blue-400 bg-slate-900'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Box className="w-3.5 h-3.5" />
-              Eksport .STEP
-            </button>
-          </div>
-
-          <div className="p-4 overflow-y-auto flex-1">
-            {activeTab === 'design' && (
-              <ControlPanel
-                params={params}
-                metrics={metrics}
-                onChange={setParams}
-                onResetBaseCase={() => setParams(ASSIGNMENT_SPECS.baseCase)}
-              />
-            )}
-            {activeTab === 'industrial' && (
-              <IndustrialPanel params={params} metrics={metrics} />
-            )}
-            {activeTab === 'export' && (
-              <SolidWorksGuide params={params} isValid={metrics.isValid} />
-            )}
-          </div>
+          ))}
         </div>
-      </main>
+
+        {/* Kandungan Panel Boleh Skrol */}
+        <div className="p-3.5 overflow-y-auto flex-1">
+          {activeTab === 'design' && (
+            <ControlPanel params={params} metrics={metrics} onChange={setParams} />
+          )}
+          {activeTab === 'industrial' && <IndustrialPanel report={report} />}
+          {activeTab === 'export' && (
+            <SolidWorksGuide params={params} isValid={metrics.isValid} />
+          )}
+        </div>
+      </aside>
+
+      {/* ZON 2 (ATAS TENGAH): Pil Pandangan Kamera */}
+      <div className="hidden md:flex absolute top-3 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-md rounded-full p-1 gap-1 z-10">
+        {(
+          [
+            { id: 'isometric', label: 'Isometrik' },
+            { id: 'front', label: 'Depan' },
+            { id: 'side', label: 'Sisi' },
+            { id: 'top', label: 'Atas' },
+          ] as { id: CameraView; label: string }[]
+        ).map((v) => (
+          <button
+            key={v.id}
+            onClick={() => handleSelectView(v.id)}
+            className={`px-3 py-1 text-xs font-semibold rounded-full transition ${
+              cameraView === v.id
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ZON 3 (KANAN ATAS): Keratan Rentas 2D & Litar Haba */}
+      <div className="hidden xl:block absolute top-3 right-3 z-10">
+        <EngineeringDiagrams params={params} metrics={metrics} report={report} />
+      </div>
+
+      {/* ZON 4 (KANAN BAWAH): Kad Metrik Gelap (HUD) */}
+      <div className="hidden xl:block absolute bottom-3 right-3 z-10">
+        <MetricsHUD metrics={metrics} report={report} />
+      </div>
     </div>
   );
 }
