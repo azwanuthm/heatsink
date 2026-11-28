@@ -1,15 +1,87 @@
-import React, { useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, Environment } from '@react-three/drei';
-import { HeatSinkParams } from '../types/heatsink';
+import { HeatSinkParams, CameraView } from '../types/heatsink';
 import { ASSIGNMENT_SPECS } from '../config/assignmentSpecs';
 
 interface Viewport3DProps {
   params: HeatSinkParams;
   isValid: boolean;
+  cameraView: CameraView;
+  viewTrigger: number;
 }
 
-const HeatSinkMesh: React.FC<Viewport3DProps> = ({ params, isValid }) => {
+const CAMERA_POSITIONS: Record<CameraView, [number, number, number]> = {
+  isometric: [105, 80, 105],
+  front: [0, 22, 135],
+  side: [135, 22, 0],
+  top: [0, 145, 0.1],
+};
+
+const CameraController: React.FC<{ cameraView: CameraView; viewTrigger: number }> = ({
+  cameraView,
+  viewTrigger,
+}) => {
+  const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+
+  useEffect(() => {
+    const pos = CAMERA_POSITIONS[cameraView];
+    camera.position.set(pos[0], pos[1], pos[2]);
+    if (controlsRef.current) {
+      controlsRef.current.target.set(0, 20, 0);
+      controlsRef.current.update();
+    }
+  }, [cameraView, viewTrigger, camera]);
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      target={[0, 20, 0]}
+      minDistance={45}
+      maxDistance={280}
+    />
+  );
+};
+
+const AirflowArrows: React.FC<{ params: HeatSinkParams }> = ({ params }) => {
+  const { baseWidth: W, baseLength: L, baseThickness: tb, finHeight: Lc } = params;
+  const arrowY = tb + Lc + 12;
+
+  const points: [number, number][] = [
+    [-W * 0.3, -L * 0.25],
+    [0, -L * 0.25],
+    [W * 0.3, -L * 0.25],
+    [-W * 0.3, L * 0.25],
+    [0, L * 0.25],
+    [W * 0.3, L * 0.25],
+  ];
+
+  return (
+    <group>
+      {points.map(([x, z], i) => (
+        <group key={i} position={[x, arrowY, z]}>
+          {/* Batang anak panah */}
+          <mesh position={[0, -5, 0]}>
+            <cylinderGeometry args={[0.7, 0.7, 10, 12]} />
+            <meshStandardMaterial color="#f97316" transparent opacity={0.85} />
+          </mesh>
+          {/* Kepala anak panah (ke atas — arah apungan udara panas) */}
+          <mesh position={[0, 2, 0]}>
+            <coneGeometry args={[2.2, 5.5, 16]} />
+            <meshStandardMaterial color="#ea580c" transparent opacity={0.95} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+const HeatSinkMesh: React.FC<{ params: HeatSinkParams; isValid: boolean }> = ({
+  params,
+  isValid,
+}) => {
   const {
     finType,
     baseWidth: W,
@@ -21,11 +93,12 @@ const HeatSinkMesh: React.FC<Viewport3DProps> = ({ params, isValid }) => {
     pinCountX: Nx,
     pinCountY: Ny,
     showChip,
+    finish,
+    showAirflow,
   } = params;
 
   const { chip } = ASSIGNMENT_SPECS;
 
-  // Kira kedudukan semua sirip/pin sekali sahaja apabila parameter berubah
   const finPositions = useMemo(() => {
     const positions: [number, number, number][] = [];
     const yCenter = tb + Lc / 2;
@@ -50,15 +123,19 @@ const HeatSinkMesh: React.FC<Viewport3DProps> = ({ params, isValid }) => {
     return positions;
   }, [finType, W, L, tb, Lc, t, N, Nx, Ny]);
 
-  // Warna Aluminium 6061 (atau merah lembut jika melanggar had kekangan)
-  const metalColor = isValid ? '#cbd5e1' : '#fca5a5';
+  // Tetapan bahan mengikut kemasan & status kekangan
+  const materialProps = !isValid
+    ? { color: '#ef4444', metalness: 0.35, roughness: 0.45 }
+    : finish === 'black-anodized'
+    ? { color: '#1e293b', metalness: 0.45, roughness: 0.55 }
+    : { color: '#cbd5e1', metalness: 0.72, roughness: 0.25 };
 
   return (
     <group>
       {/* Tapak Heat Sink */}
       <mesh position={[0, tb / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[W, tb, L]} />
-        <meshStandardMaterial color={metalColor} metalness={0.75} roughness={0.28} />
+        <meshStandardMaterial {...materialProps} />
       </mesh>
 
       {/* Sirip / Pin */}
@@ -67,51 +144,55 @@ const HeatSinkMesh: React.FC<Viewport3DProps> = ({ params, isValid }) => {
           {finType === 'rectangular' && <boxGeometry args={[t, Lc, L]} />}
           {finType === 'square-pin' && <boxGeometry args={[t, Lc, t]} />}
           {finType === 'circular-pin' && <cylinderGeometry args={[t / 2, t / 2, Lc, 24]} />}
-          <meshStandardMaterial color={metalColor} metalness={0.75} roughness={0.28} />
+          <meshStandardMaterial {...materialProps} />
         </mesh>
       ))}
 
-      {/* Blok Cip Silikon (40 x 40 x 2 mm di bawah tapak) */}
+      {/* Blok Cip Silikon */}
       {showChip && (
         <mesh position={[0, -chip.thickness / 2, 0]} receiveShadow>
           <boxGeometry args={[chip.width, chip.thickness, chip.length]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.4} roughness={0.5} />
+          <meshStandardMaterial color="#0f172a" metalness={0.3} roughness={0.6} />
         </mesh>
       )}
+
+      {/* Anak Panah Aliran Udara Panas */}
+      {showAirflow && <AirflowArrows params={params} />}
     </group>
   );
 };
 
-export const Viewport3D: React.FC<Viewport3DProps> = ({ params, isValid }) => {
+export const Viewport3D: React.FC<Viewport3DProps> = ({
+  params,
+  isValid,
+  cameraView,
+  viewTrigger,
+}) => {
   return (
-    <div className="relative w-full h-full bg-slate-900 rounded-xl overflow-hidden border border-slate-800">
-      <Canvas shadows camera={{ position: [95, 75, 95], fov: 40 }}>
-        <color attach="background" args={['#0f172a']} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[80, 120, 60]} intensity={1.2} castShadow />
-        <Environment preset="city" />
+    <div className="w-full h-full bg-[#f1f5f9]">
+      <Canvas shadows camera={{ position: [105, 80, 105], fov: 38 }}>
+        <color attach="background" args={['#f1f5f9']} />
+        <ambientLight intensity={0.75} />
+        <directionalLight position={[80, 130, 70]} intensity={1.1} castShadow />
+        <directionalLight position={[-60, 40, -60]} intensity={0.4} />
+        <Environment preset="studio" />
 
         <HeatSinkMesh params={params} isValid={isValid} />
 
         <Grid
           position={[0, -ASSIGNMENT_SPECS.chip.thickness - 0.1, 0]}
-          args={[160, 160]}
+          args={[220, 220]}
           cellSize={10}
-          cellThickness={0.6}
-          cellColor="#334155"
+          cellThickness={0.5}
+          cellColor="#cbd5e1"
           sectionSize={50}
           sectionThickness={1}
-          sectionColor="#475569"
-          fadeDistance={250}
+          sectionColor="#94a3b8"
+          fadeDistance={260}
         />
 
-        <OrbitControls makeDefault target={[0, 20, 0]} minDistance={40} maxDistance={260} />
+        <CameraController cameraView={cameraView} viewTrigger={viewTrigger} />
       </Canvas>
-
-      {/* Petunjuk Kawalan Tetikus */}
-      <div className="absolute bottom-3 left-3 text-xs text-slate-400 bg-slate-950/70 px-3 py-1.5 rounded-lg backdrop-blur-sm">
-        Klik kiri: Pusing &bull; Skrol: Zum &bull; Klik kanan: Alih
-      </div>
     </div>
   );
 };
