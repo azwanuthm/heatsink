@@ -94,7 +94,7 @@ export function analyzeIndustrialDFM(
   }
 
   // 4. Status Aliran Perolakan Semula Jadi (Panduan Simulasi SolidWorks)
-  let convectionStatus: 'Optimum' | 'Tercekik (Choked)' | 'Terlalu Jarang' = 'Optimum';
+  let convectionStatus: 'Optimum' | 'Aliran Terhad' | 'Terlalu Jarang' = 'Optimum';
   let convectionColor: 'emerald' | 'red' | 'amber' = 'emerald';
   let convectionNote = '';
 
