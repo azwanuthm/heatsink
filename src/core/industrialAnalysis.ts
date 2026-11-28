@@ -21,7 +21,7 @@ export interface IndustrialReport {
   costColor: 'emerald' | 'amber' | 'red';
   dfmNote: string;
 
-  convectionStatus: 'Optimum' | 'Tercekik (Choked)' | 'Terlalu Jarang';
+  convectionStatus: 'Optimum' | 'Aliran Terhad' | 'Terlalu Jarang';
   convectionColor: 'emerald' | 'red' | 'amber';
   convectionNote: string;
 
@@ -98,10 +98,10 @@ export function analyzeIndustrialDFM(
   let convectionColor: 'emerald' | 'red' | 'amber' = 'emerald';
   let convectionNote = '';
 
-  if (minGap < 5.0) {
-    convectionStatus = 'Tercekik (Choked)';
-    convectionColor = 'red';
-    convectionNote = `Celah semasa (${minGap.toFixed(1)} mm) terlalu sempit untuk udara tenang. Dalam Flow Simulation nanti, semak Cut Plot halaju udara — lapisan sempadan haba mungkin bertindih dan menaikkan semula suhu cip.`;
+if (minGap < 5.0) {
+    convectionStatus = 'Aliran Terhad';
+    convectionColor = 'amber';
+    convectionNote = `Celah semasa (${minGap.toFixed(1)} mm) mula meningkatkan rintangan aliran udara tenang. Sesuai dijadikan salah satu iterasi dalam Flow Simulation untuk menguji sama ada pertambahan luas permukaan masih berbaloi.`;
   } else if (minGap <= 12.0) {
     convectionStatus = 'Optimum';
     convectionColor = 'emerald';
@@ -117,7 +117,7 @@ export function analyzeIndustrialDFM(
   if (isBaseCase) {
     po3Challenge =
       'Ini adalah model rujukan (Base Case). Gunakan jisim (126.4 g) dan suhu simulasi model ini sebagai penanda aras untuk membuktikan peningkatan prestasi dalam Fasa 3.';
-  } else if (convectionStatus === 'Tercekik (Choked)') {
+  } else if (convectionStatus === 'Aliran Terhad') {
     po3Challenge = `Walaupun luas permukaan berubah sebanyak ${areaDiffPct >= 0 ? '+' : ''}${areaDiffPct.toFixed(1)}%, celah ${minGap.toFixed(1)} mm berisiko menyekat aliran udara. Bincangkan dalam laporan jika graf suhu anda mula naik semula pada iterasi ini.`;
   } else if (massDiffPct > 20) {
     po3Challenge = `Reka bentuk ini ${massDiffPct.toFixed(1)}% lebih berat daripada Base Case. Dalam laporan Fasa 3, anda perlu buktikan penurunan suhu cip cukup signifikan untuk mewajarkan pertambahan kos bahan ini.`;
