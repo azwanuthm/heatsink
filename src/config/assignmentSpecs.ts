@@ -6,19 +6,19 @@ export const ASSIGNMENT_SPECS = {
   limits: {
     maxBaseWidth: 60,     // mm
     maxBaseLength: 60,    // mm
-    maxTotalHeight: 50,   // mm (dari permukaan cip)
-    minFinGap: 1.5,       // mm (elak sirip terlalu rapat / bertindih)
+    maxTotalHeight: 50,   // mm
+    minFinGap: 1.5,       // mm
     minBaseThickness: 2,  // mm
   },
   thermal: {
-    tAmbient: 30,         // °C (Stagnant Air)
-    tMaxChip: 85,         // °C (Had selamat cip)
-    timAllowance: 0.8,    // °C/W (Anggaran rintangan Thermal Paste industri)
+    tAmbient: 30,         // °C
+    tMaxChip: 85,         // °C
+    timAllowance: 0.8,    // °C/W
   },
   chip: {
     width: 40,            // mm
     length: 40,           // mm
-    thickness: 2,         // mm (standard benchmark multi-body)
+    thickness: 2,         // mm
     heatPower: 10,        // Watt
     material: 'Silicon',
   },
@@ -38,11 +38,33 @@ export const ASSIGNMENT_SPECS = {
     pinCountX: 5,
     pinCountY: 5,
     showChip: true,
+    finish: 'raw',
+    showAirflow: false,
   } as HeatSinkParams,
   industrialPresets: [
     {
+      id: 'base-case',
+      label: 'Base Case (Fasa 1&2)',
+      desc: '6 sirip segi empat, celah 9.6 mm (Model Rujukan).',
+      params: {
+        finType: 'rectangular',
+        baseWidth: 60,
+        baseLength: 60,
+        baseThickness: 5,
+        finHeight: 40,
+        finThickness: 2,
+        finCount: 6,
+        pinCountX: 5,
+        pinCountY: 5,
+        showChip: true,
+        finish: 'raw',
+        showAirflow: false,
+      } as HeatSinkParams,
+    },
+    {
       id: 'power-extruded',
-      label: 'Power Electronics (Extruded)',
+      label: 'Power Extruded',
+      desc: '7 sirip anodized hitam, tapak tebal 6 mm untuk elektronik kuasa.',
       params: {
         finType: 'rectangular',
         baseWidth: 60,
@@ -54,11 +76,14 @@ export const ASSIGNMENT_SPECS = {
         pinCountX: 5,
         pinCountY: 5,
         showChip: true,
+        finish: 'black-anodized',
+        showAirflow: true,
       } as HeatSinkParams,
     },
     {
       id: 'led-pinfin',
-      label: 'LED / Embedded (Pin Fin)',
+      label: 'LED Pin Fin',
+      desc: '5×5 pin silinder untuk aliran udara bebas dari semua arah.',
       params: {
         finType: 'circular-pin',
         baseWidth: 60,
@@ -70,6 +95,27 @@ export const ASSIGNMENT_SPECS = {
         pinCountX: 5,
         pinCountY: 5,
         showChip: true,
+        finish: 'black-anodized',
+        showAirflow: true,
+      } as HeatSinkParams,
+    },
+    {
+      id: 'high-density',
+      label: 'Uji Aliran Tercekik',
+      desc: '12 sirip rapat (celah 3.3 mm) — contoh risiko choked flow.',
+      params: {
+        finType: 'rectangular',
+        baseWidth: 60,
+        baseLength: 60,
+        baseThickness: 4,
+        finHeight: 42,
+        finThickness: 2,
+        finCount: 12,
+        pinCountX: 5,
+        pinCountY: 5,
+        showChip: true,
+        finish: 'raw',
+        showAirflow: true,
       } as HeatSinkParams,
     },
   ],
